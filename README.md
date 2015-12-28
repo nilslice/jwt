@@ -5,7 +5,7 @@
 
 package jwt provides methods to create and check JSON Web Tokens. It only implements HMAC 256 encryption and has a very small footprint, ideal for simple usage when authorizing clients
 
-```golang 
+```go
 	package main
 
 	import (
