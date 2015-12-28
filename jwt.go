@@ -172,3 +172,9 @@ func Passes(token string) bool {
 
 	return signed.verify(encoded{token: token})
 }
+
+// Secret is a helper function to set the unexported privateKey variable used when signing and verifying tokens.
+// Its argument is type []byte since we expect users to read this value from a file which can be excluded from source code.
+func Secret(key []byte) {
+	privateKey = key
+}
