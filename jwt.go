@@ -43,7 +43,9 @@ func newEncoded(claims map[string]interface{}) (encoded, error) {
 	}
 
 	for _, claim := range registeredClaims {
-		claims[claim] = nil
+		if _, ok := claims[claim]; !ok {
+			claims[claim] = nil
+		}
 	}
 
 	payload, err := json.Marshal(claims)
