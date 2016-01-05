@@ -14,14 +14,7 @@ var (
 	privateKey       = []byte("")
 	defaultHeader    = header{Typ: "JWT", Alg: "HS256"}
 	registeredClaims = []string{"iss", "sub", "aud", "exp", "nbf", "iat", "jti"}
-	defaultPayload   = make(payload)
 )
-
-func init() {
-	for _, c := range registeredClaims {
-		defaultPayload[c] = nil
-	}
-}
 
 type header struct {
 	Typ string `json:"typ"`
@@ -43,13 +36,17 @@ type signedDecoded struct {
 	signature string
 }
 
-func newEncoded() (encoded, error) {
+func newEncoded(claims map[string]interface{}) (encoded, error) {
 	header, err := json.Marshal(defaultHeader)
 	if err != nil {
 		return encoded{}, err
 	}
 
-	payload, err := json.Marshal(defaultPayload)
+	for _, claim := range registeredClaims {
+		claims[claim] = nil
+	}
+
+	payload, err := json.Marshal(claims)
 	if err != nil {
 		return encoded{}, err
 	}
@@ -147,8 +144,8 @@ func (e encoded) parseToken() (decoded, error) {
 }
 
 // New returns a token (string) and error. The token is a fully qualified JWT to be sent to a client via HTTP Header or other method. Error returned will be from the newEncoded unexported function.
-func New() (string, error) {
-	enc, err := newEncoded()
+func New(claims map[string]interface{}) (string, error) {
+	enc, err := newEncoded(claims)
 	if err != nil {
 		return "", err
 	}
