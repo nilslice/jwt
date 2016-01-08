@@ -172,6 +172,23 @@ func Passes(token string) bool {
 	return signed.verify(encoded{token: token})
 }
 
+func GetPayload(token string) map[string]interface{} {
+	dec, err := newDecoded(token)
+	if err != nil {
+		return nil
+	}
+
+	dst := map[string]interface{}{}
+
+	err = json.Unmarshal([]byte(dec.payload), &dst)
+	if err != nil {
+		return nil
+	}
+
+	return dst
+
+}
+
 // Secret is a helper function to set the unexported privateKey variable used when signing and verifying tokens.
 // Its argument is type []byte since we expect users to read this value from a file which can be excluded from source code.
 func Secret(key []byte) {
