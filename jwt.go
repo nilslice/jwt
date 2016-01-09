@@ -172,15 +172,23 @@ func Passes(token string) bool {
 	return signed.verify(encoded{token: token})
 }
 
-func GetPayload(token string) map[string]interface{} {
+// GetClaims() returns a token's claims, allowing
+// you to check the values to make sure they match
+func GetClaims(token string) map[string]interface{} {
+	// decode the token
 	dec, err := newDecoded(token)
 	if err != nil {
 		return nil
 	}
 
-	dst := map[string]interface{}{}
+	// base64 decode payload
+	payload, err := base64.RawURLEncoding.DecodeString(dec.payload)
+	if err != nil {
+		return nil
+	}
 
-	err = json.Unmarshal([]byte(dec.payload), &dst)
+	dst := map[string]interface{}{}
+	err = json.Unmarshal(payload, &dst)
 	if err != nil {
 		return nil
 	}
