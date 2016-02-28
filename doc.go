@@ -1,4 +1,4 @@
-// Package jwt provides methods to create and check JSON Web Tokens. It only implements HMAC 256 encryption and has a very small footprint, ideal for simple usage when authorizing clients
+// Package jwt provides methods to create and check JSON Web Tokens (JWT). It only implements HMAC 256 encryption and has a very small footprint, ideal for simple usage when authorizing clients
 /*
 
 	package main
