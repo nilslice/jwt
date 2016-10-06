@@ -17,7 +17,7 @@ package jwt provides methods to create and check JSON Web Tokens. It only implem
 
 	func main() {
 	http.HandleFunc("/auth/new", func(res http.ResponseWriter, req *http.Request) {
-			claims := map[string]interface{"exp": time.Now().Add(time.Hour * 24).Unix()}
+			claims := map[string]interface{}{"exp": time.Now().Add(time.Hour * 24).Unix()}
 			token, err := auth.New(claims)
 			if err != nil {
 				http.Error(res, "Error", 500)
