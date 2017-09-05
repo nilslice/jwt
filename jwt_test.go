@@ -43,10 +43,10 @@ func TestGrantFails(t *testing.T) {
 	}
 }
 
-const email = "hello@nilslice.xyz"
-const authLevel = 7
-
 func TestGetClaims(t *testing.T) {
+	email := "hello@nilslice.xyz"
+	authLevel := float64(7)
+
 	claims := map[string]interface{}{
 		"email":      email,
 		"auth_level": authLevel,
