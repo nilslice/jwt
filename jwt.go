@@ -16,6 +16,64 @@ var (
 	registeredClaims = []string{"iss", "sub", "aud", "exp", "nbf", "iat", "jti"}
 )
 
+// New returns a token (string) and error. The token is a fully qualified JWT to be sent to a client via HTTP Header or other method. Error returned will be from the newEncoded unexported function.
+func New(claims map[string]interface{}) (string, error) {
+	enc, err := newEncoded(claims)
+	if err != nil {
+		return "", err
+	}
+
+	return enc.token, nil
+}
+
+// Passes returns a bool indicating whether a token (string) provided has been signed by our server. If true, the client is authenticated and may proceed.
+func Passes(token string) bool {
+	dec, err := newDecoded(token)
+	if err != nil {
+		// may want to log some error here so we have visibility
+		// intentionally simplifying return type to bool for ease
+		// of use in API. Caller should only do `if auth.Passes(str) {}`
+		return false
+	}
+	signed, err := dec.sign()
+	if err != nil {
+		return false
+	}
+
+	return signed.verify(encoded{token: token})
+}
+
+// GetClaims() returns a token's claims, allowing
+// you to check the values to make sure they match
+func GetClaims(token string) map[string]interface{} {
+	// decode the token
+	dec, err := newDecoded(token)
+	if err != nil {
+		return nil
+	}
+
+	// base64 decode payload
+	payload, err := base64.RawURLEncoding.DecodeString(dec.payload)
+	if err != nil {
+		return nil
+	}
+
+	dst := map[string]interface{}{}
+	err = json.Unmarshal(payload, &dst)
+	if err != nil {
+		return nil
+	}
+
+	return dst
+
+}
+
+// Secret is a helper function to set the unexported privateKey variable used when signing and verifying tokens.
+// Its argument is type []byte since we expect users to read this value from a file which can be excluded from source code.
+func Secret(key []byte) {
+	privateKey = key
+}
+
 type header struct {
 	Typ string `json:"typ"`
 	Alg string `json:"alg"`
@@ -26,6 +84,7 @@ type payload map[string]interface{}
 type encoded struct {
 	token string
 }
+
 type decoded struct {
 	header  string
 	payload string
@@ -121,7 +180,10 @@ func (d *decoded) sign() (signedDecoded, error) {
 }
 
 func (sd signedDecoded) token() string {
-	return fmt.Sprintf("%s.%s.%s", sd.getHeader(), sd.getPayload(), sd.getSignature())
+	return fmt.Sprintf(
+		"%s.%s.%s",
+		sd.getHeader(), sd.getPayload(), sd.getSignature(),
+	)
 }
 
 func (sd signedDecoded) verify(enc encoded) bool {
@@ -143,62 +205,4 @@ func (e encoded) parseToken() (decoded, error) {
 	}
 
 	return d, nil
-}
-
-// New returns a token (string) and error. The token is a fully qualified JWT to be sent to a client via HTTP Header or other method. Error returned will be from the newEncoded unexported function.
-func New(claims map[string]interface{}) (string, error) {
-	enc, err := newEncoded(claims)
-	if err != nil {
-		return "", err
-	}
-
-	return enc.token, nil
-}
-
-// Passes returns a bool indicating whether a token (string) provided has been signed by our server. If true, the client is authenticated and may proceed.
-func Passes(token string) bool {
-	dec, err := newDecoded(token)
-	if err != nil {
-		// may want to log some error here so we have visibility
-		// intentionally simplifying return type to bool for ease
-		// of use in API. Caller should only do `if auth.Passes(str) {}`
-		return false
-	}
-	signed, err := dec.sign()
-	if err != nil {
-		return false
-	}
-
-	return signed.verify(encoded{token: token})
-}
-
-// GetClaims() returns a token's claims, allowing
-// you to check the values to make sure they match
-func GetClaims(token string) map[string]interface{} {
-	// decode the token
-	dec, err := newDecoded(token)
-	if err != nil {
-		return nil
-	}
-
-	// base64 decode payload
-	payload, err := base64.RawURLEncoding.DecodeString(dec.payload)
-	if err != nil {
-		return nil
-	}
-
-	dst := map[string]interface{}{}
-	err = json.Unmarshal(payload, &dst)
-	if err != nil {
-		return nil
-	}
-
-	return dst
-
-}
-
-// Secret is a helper function to set the unexported privateKey variable used when signing and verifying tokens.
-// Its argument is type []byte since we expect users to read this value from a file which can be excluded from source code.
-func Secret(key []byte) {
-	privateKey = key
 }
